@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f6f0e8">
+<title>Escolha sua loja</title>
+<style>
+:root{
+  --bg:#f6f0e8;
+  --ink:#251b16;
+  --muted:#75685e;
+  --card:#fffdf9;
+  --shadow:0 18px 45px rgba(38,28,20,.13);
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink)}
+body{overflow-x:hidden}
+.page{min-height:100vh;padding:34px 18px 40px;display:flex;justify-content:center}
+.wrap{width:min(620px,100%);text-align:center}
+.brand{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:6px 0 10px}
+h1{margin:0;font-family:Georgia,serif;font-size:34px;line-height:1.05}
+.subtitle{margin:10px auto 28px;color:var(--muted);font-size:15px}
+.orbit{
+  position:relative;
+  width:min(92vw,560px);
+  height:min(92vw,560px);
+  max-height:560px;
+  margin:0 auto;
+}
+.center{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:108px;height:108px;border-radius:50%;
+  background:rgba(255,253,249,.86);
+  border:1px solid rgba(80,60,45,.08);
+  box-shadow:var(--shadow);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--muted);font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:800;
+  backdrop-filter:blur(6px);
+}
+.ring{position:absolute;inset:6%;border:1px dashed rgba(70,52,40,.12);border-radius:50%;animation:spin 26s linear infinite}
+.ring2{position:absolute;inset:20%;border:1px solid rgba(70,52,40,.07);border-radius:50%;animation:spinReverse 20s linear infinite}
+.store{
+  position:absolute;width:138px;height:138px;border-radius:50%;
+  background:var(--card);padding:12px;border:1px solid rgba(70,52,40,.09);
+  box-shadow:var(--shadow);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .25s ease, box-shadow .25s ease;
+  animation:float 4.6s ease-in-out infinite;
+  -webkit-tap-highlight-color:transparent;
+}
+.store:hover,.store:focus-visible{transform:scale(1.08);box-shadow:0 24px 55px rgba(38,28,20,.22);outline:none}
+.store img{width:100%;height:100%;object-fit:contain;border-radius:50%}
+.store span{position:absolute;bottom:-27px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:12px;font-weight:800;color:var(--ink)}
+.s1{left:2%;top:22%;animation-delay:-.5s}
+.s2{right:2%;top:22%;animation-delay:-1.8s}
+.s3{left:8%;bottom:10%;animation-delay:-3s}
+.s4{right:8%;bottom:10%;animation-delay:-4s}
+.hint{margin-top:10px;color:var(--muted);font-size:13px}
+@keyframes float{0%,100%{translate:0 0}50%{translate:0 -9px}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes spinReverse{to{transform:rotate(-360deg)}}
+
+.modal{position:fixed;inset:0;background:rgba(18,14,11,.72);display:none;z-index:20;padding:14px}
+.modal.open{display:flex;align-items:center;justify-content:center}
+.sheet{width:min(100%,900px);height:min(94vh,900px);background:#fff;border-radius:18px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 30px 90px rgba(0,0,0,.35)}
+.bar{height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 14px 0 18px;border-bottom:1px solid #eee;background:#fff}
+.bar strong{font-size:15px}
+.close{border:0;background:#f2eee9;border-radius:999px;padding:9px 14px;font-weight:800;cursor:pointer}
+iframe{border:0;width:100%;height:100%;background:#eee}
+.note{font-size:11px;color:#8b8179;margin-top:20px}
+@media (max-width:520px){
+  .page{padding-top:28px}
+  h1{font-size:29px}
+  .orbit{height:480px}
+  .store{width:118px;height:118px}
+  .center{width:92px;height:92px;font-size:10px}
+  .s1{left:0;top:20%}.s2{right:0;top:20%}.s3{left:4%;bottom:9%}.s4{right:4%;bottom:9%}
+}
+</style>
+</head>
+<body>
+<main class="page">
+  <section class="wrap">
+    <div class="brand">Menu Digital</div>
+    <h1>Escolha sua loja</h1>
+    <p class="subtitle">Toque em uma das opções para acessar o cardápio.</p>
+
+    <div class="orbit">
+      <div class="ring"></div>
+      <div class="ring2"></div>
+      <div class="center">Nossas<br>lojas</div>
+
+      <button class="store s1" onclick="openMenu('Casa Bauducco')" aria-label="Abrir Casa Bauducco">
+        <img src="logos/casa-bauducco.jfif" alt="Casa Bauducco"><span>Casa Bauducco</span>
+      </button>
+      <button class="store s2" onclick="openMenu('Casa Café')" aria-label="Abrir Casa Café">
+        <img src="logos/casa-cafe.png" alt="Casa Café"><span>Casa Café</span>
+      </button>
+      <button class="store s3" onclick="openMenu('Rei do Pão de Queijo')" aria-label="Abrir Rei do Pão de Queijo">
+        <img src="logos/rei-pao-de-queijo.png" alt="Rei do Pão de Queijo"><span>Rei do Pão de Queijo</span>
+      </button>
+      <button class="store s4" onclick="openMenu('Royal Trudel')" aria-label="Abrir Royal Trudel">
+        <img src="logos/royal.jpg" alt="Royal Trudel"><span>Royal Trudel</span>
+      </button>
+    </div>
+
+    <div class="hint">Toque em uma logo</div>
+    <div class="note">Protótipo de teste • todas as lojas abrem o mesmo cardápio de demonstração.</div>
+  </section>
+</main>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="Cardápio">
+  <div class="sheet">
+    <div class="bar">
+      <strong id="menuTitle">Cardápio</strong>
+      <button class="close" onclick="closeMenu()">Voltar</button>
+    </div>
+    <iframe id="menuFrame" src="" title="Cardápio de demonstração"></iframe>
+  </div>
+</div>
+
+<script>
+const modal = document.getElementById('modal');
+const frame = document.getElementById('menuFrame');
+const title = document.getElementById('menuTitle');
+
+function openMenu(name){
+  title.textContent = name;
+  frame.src = 'cardapio-teste.pdf';
+  modal.classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeMenu(){
+  modal.classList.remove('open');
+  frame.src='';
+  document.body.style.overflow='';
+}
+modal.addEventListener('click', e => { if(e.target === modal) closeMenu(); });
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeMenu(); });
+</script>
+</body>
+</html>
