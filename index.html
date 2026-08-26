@@ -130,8 +130,7 @@ h1{
   width:100%;height:100%;display:block;object-fit:contain;border-radius:50%;
   background:#fff;
 }
-.store:hover,.store:focus-visible{
-  transform:scale(1.10);
+
   border-color:rgba(231,201,138,.65);
   box-shadow:0 30px 70px rgba(0,0,0,.52),0 0 35px rgba(231,201,138,.14);
   outline:none;
@@ -429,44 +428,43 @@ function mudarPagina(delta){
 prevPage.addEventListener("click", () => mudarPagina(-1));
 nextPage.addEventListener("click", () => mudarPagina(1));
 
-let touchStartX = 0;
-let touchStartY = 0;
-let touchStartTime = 0;
-let swipeStarted = false;
+let swipeStartX = 0;
+let swipeStartY = 0;
+let swipeStartTime = 0;
+let swipeActive = false;
 
-document.addEventListener("touchstart", e => {
-  // Não inicia swipe se o usuário estiver dentro do PDF/modal.
+const swipeArea = document.querySelector(".page") || document.body;
+
+swipeArea.addEventListener("pointerdown", e => {
   if (e.target.closest(".modal")) return;
 
-  const touch = e.changedTouches[0];
-  touchStartX = touch.clientX;
-  touchStartY = touch.clientY;
-  touchStartTime = Date.now();
-  swipeStarted = true;
+  swipeStartX = e.clientX;
+  swipeStartY = e.clientY;
+  swipeStartTime = Date.now();
+  swipeActive = true;
 }, {passive:true});
 
-document.addEventListener("touchend", e => {
-  if (!swipeStarted) return;
-  swipeStarted = false;
+swipeArea.addEventListener("pointerup", e => {
+  if (!swipeActive) return;
+  swipeActive = false;
 
   if (e.target.closest(".modal")) return;
 
-  const touch = e.changedTouches[0];
-  const diffX = touch.clientX - touchStartX;
-  const diffY = touch.clientY - touchStartY;
-  const duration = Date.now() - touchStartTime;
+  const diffX = e.clientX - swipeStartX;
+  const diffY = e.clientY - swipeStartY;
+  const duration = Date.now() - swipeStartTime;
 
-  // Gesto rápido, horizontal e com distância suficiente.
-  if (duration > 800) return;
-  if (Math.abs(diffX) < 45) return;
-  if (Math.abs(diffX) <= Math.abs(diffY) * 1.15) return;
+  // Swipe rápido, horizontal e suficientemente longo.
+  if (duration > 900) return;
+  if (Math.abs(diffX) < 50) return;
+  if (Math.abs(diffX) <= Math.abs(diffY)) return;
 
   mudarPagina(diffX < 0 ? 1 : -1);
+});
 
-  touchStartX = 0;
-  touchStartY = 0;
-  touchStartTime = 0;
-}, {passive:true});
+swipeArea.addEventListener("pointercancel", () => {
+  swipeActive = false;
+});
 
 function openMenu(loja){
   title.textContent = loja.nome;
