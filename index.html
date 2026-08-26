@@ -295,6 +295,7 @@ iframe{border:0;width:100%;height:100%;background:#eee}
   .store{animation:none!important;transition:none!important}
 }
 
+.stores{touch-action:pan-y;}
 </style>
 </head>
 <body>
@@ -428,16 +429,27 @@ function mudarPagina(delta){
 prevPage.addEventListener("click", () => mudarPagina(-1));
 nextPage.addEventListener("click", () => mudarPagina(1));
 
-let touchStartX = null;
+let touchStartX = 0;
+let touchStartY = 0;
+let touchStartTime = 0;
+
 storesEl.addEventListener("touchstart", e => {
-  touchStartX = e.changedTouches[0].clientX;
+  const touch = e.changedTouches[0];
+  touchStartX = touch.clientX;
+  touchStartY = touch.clientY;
+  touchStartTime = Date.now();
 }, {passive:true});
 
 storesEl.addEventListener("touchend", e => {
-  if(touchStartX === null) return;
-  const diff = e.changedTouches[0].clientX - touchStartX;
-  if(Math.abs(diff) > 55) mudarPagina(diff < 0 ? 1 : -1);
-  touchStartX = null;
+  const touch = e.changedTouches[0];
+  const diffX = touch.clientX - touchStartX;
+  const diffY = touch.clientY - touchStartY;
+  const duration = Date.now() - touchStartTime;
+  if(duration > 700) return;
+  if(Math.abs(diffX) < Math.abs(diffY)) return;
+  if(Math.abs(diffX) < 45) return;
+  mudarPagina(diffX < 0 ? 1 : -1);
+  touchStartX = 0; touchStartY = 0; touchStartTime = 0;
 }, {passive:true});
 
 function openMenu(loja){
