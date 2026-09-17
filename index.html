@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0b0b0d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Menu Digital</title>
-<style>
+<script type="text/javascript" src="https://gc.kis.v2.scr.kaspersky-labs.com/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js?attr=aYfbNVx1lJllUCJiaG2rByuGjqRCuHL3GTWxv5RAMmbvfmUj7ktU9AA7zeDzVfJugHf7Gw2PH7QoJ9LN_NaSPrSpJDa8ZR9zUtEpqpPhb1tbiF4LkPBsn2_rs6FYFRnDvu1dOVWSOHTv0dK0IMgGjiNzPMlViXepEttB2S5Es_KFQPifNl4Y4sggFo-F9hqHgjSKrJNxQlkMYbnNObLmNlqzxEA6ohLFJK-fh705wsgep9NoqE8iK7ygyGI8M8H7nOAqa-nONs6cBHq3PW8R6GmVgRIPWieNqR6KCfCCKkfxsOpk_BJ8ov0QML09oxLi" charset="UTF-8"></script><style>
 :root{
   --bg:#08090b;
   --bg2:#111216;
@@ -312,6 +312,13 @@ iframe{border:0;width:100%;height:100%;background:#eee}
 .menu-images.zoomed figure{width:200%}
 .menu-images a{display:block;padding:16px;color:#333}
 @media(max-width:560px){.modal{padding:0}.sheet{height:100dvh;max-height:none;border-radius:0}.bar{padding:10px;min-height:60px}.actions{gap:5px}.action{padding:9px 10px}}
+
+/* Keep orbital positioning independent from entrance and tap transforms. */
+.store.p1.entering,.store.p1.exiting{transform:translateX(-50%) scale(.88)}
+.store.p1:active{transform:translateX(-50%) scale(.96)}
+.store:focus-visible{outline:2px solid var(--gold);outline-offset:5px}
+.store .label{max-width:150px;white-space:normal;width:max-content}
+@media(max-width:560px){.store .label{max-width:110px}}
 </style>
 </head>
 <body>
@@ -389,6 +396,8 @@ const pageDots = document.getElementById("pageDots");
 const POR_PAGINA = 5;
 const totalPaginas = Math.ceil(lojas.length / POR_PAGINA);
 let paginaAtual = 0;
+let pageChanging = false;
+let suppressStoreClickUntil = 0;
 const menuImages = document.getElementById("menuImages");
 const zoomMenu = document.getElementById("zoomMenu");
 let previousFocus = null;
@@ -423,7 +432,9 @@ function renderLojas(direction=1){
     button.innerHTML = `<img src="${loja.logo}" alt="${loja.nome}"><span class="label">${loja.nome}</span>`;
     button.style.animationDelay = `${-0.7 - i * 1.05}s`;
 
-    button.addEventListener("click", () => openMenu(loja));
+    button.addEventListener("click", () => {
+      if(performance.now() >= suppressStoreClickUntil) openMenu(loja);
+    });
     storesEl.appendChild(button);
 
     requestAnimationFrame(() => {
@@ -436,9 +447,11 @@ function renderLojas(direction=1){
 }
 
 function mudarPagina(delta){
+  if(pageChanging) return;
   const nova = paginaAtual + delta;
   if(nova < 0 || nova >= totalPaginas) return;
 
+  pageChanging = true;
   const atual = Array.from(storesEl.children);
   atual.forEach((el, i) => {
     el.classList.remove("visible");
@@ -449,6 +462,7 @@ function mudarPagina(delta){
   setTimeout(() => {
     paginaAtual = nova;
     renderLojas(delta);
+    pageChanging = false;
   }, 260);
 }
 
@@ -486,6 +500,7 @@ swipeArea.addEventListener("pointerup", e => {
   if (Math.abs(diffX) < 50) return;
   if (Math.abs(diffX) <= Math.abs(diffY)) return;
 
+  suppressStoreClickUntil = performance.now() + 500;
   mudarPagina(diffX < 0 ? 1 : -1);
 });
 
@@ -557,6 +572,71 @@ document.addEventListener("keydown", e => {
 });
 
 renderLojas();
+
+/* Gentle orbital movement. Existing CSS remains the source of store positions. */
+const orbitScene = document.querySelector(".scene");
+const orbitMotion = matchMedia("(prefers-reduced-motion: reduce)");
+let orbitAngle = 0, orbitLast = 0, orbitFrame = 0;
+let orbitItems = [], orbitHover = false, orbitHeld = false, orbitResumeAt = 0;
+function measureOrbit(){
+  const w = orbitScene.clientWidth, h = orbitScene.clientHeight;
+  orbitItems = Array.from(storesEl.children).map(el => {
+    const size = el.offsetWidth;
+    const x = el.offsetLeft + size / 2 - (el.classList.contains("p1") ? size / 2 : 0);
+    const y = el.offsetTop + size / 2;
+    // Follow the existing portrait oval, with room for the pulsing logo edges.
+    const rx = Math.max(1, (w - size * 1.045) / 2 - 8);
+    const ry = Math.max(1, (h - size * 1.045) / 2 - 24);
+    const nx = (x - w / 2) / rx, ny = (y - h / 2) / ry;
+    const radius = Math.hypot(nx, ny);
+    return {el, x, y, rx, ry, phase:Math.atan2(ny,nx), radius:Math.min(1,radius)};
+  });
+  paintOrbit();
+}
+function paintOrbit(){
+  const w = orbitScene.clientWidth, h = orbitScene.clientHeight;
+  orbitItems.forEach(({el,x,y,rx,ry,phase,radius}) => {
+    if(orbitMotion.matches){el.style.translate = "";return;}
+    const a = phase + orbitAngle;
+    el.style.translate = (w/2 + rx*radius*Math.cos(a)-x) + "px " +
+      (h/2 + ry*radius*Math.sin(a)-y) + "px";
+  });
+}
+function animateOrbit(now){
+  const dt = orbitLast ? Math.min(now-orbitLast,50) : 0;
+  orbitLast = now;
+  const keyboardFocus = storesEl.querySelector(":focus-visible");
+  if(!orbitMotion.matches && !orbitHover && !orbitHeld && !keyboardFocus &&
+      !modal.classList.contains("open") && now >= orbitResumeAt){
+    orbitAngle = (orbitAngle + dt * Math.PI*2 / 90000) % (Math.PI*2);
+    paintOrbit();
+  }
+  orbitFrame = requestAnimationFrame(animateOrbit);
+}
+function startOrbit(){
+  cancelAnimationFrame(orbitFrame);
+  orbitLast = 0;
+  if(!document.hidden && !orbitMotion.matches) orbitFrame = requestAnimationFrame(animateOrbit);
+  paintOrbit();
+}
+orbitScene.addEventListener("pointerover", e => {
+  if(e.pointerType === "mouse" && e.target.closest(".store")) orbitHover = true;
+});
+orbitScene.addEventListener("pointerout", e => {
+  if(e.pointerType === "mouse" && !e.relatedTarget?.closest?.(".store")) orbitHover = false;
+});
+swipeArea.addEventListener("pointerdown", () => {orbitHeld = true;}, {passive:true});
+function releaseOrbit(){orbitHeld = false;orbitResumeAt = performance.now()+1200;}
+window.addEventListener("pointerup", releaseOrbit, {passive:true});
+window.addEventListener("pointercancel", releaseOrbit, {passive:true});
+window.addEventListener("blur", () => {releaseOrbit();swipeActive=false;});
+document.addEventListener("visibilitychange", startOrbit);
+orbitMotion.addEventListener("change", () => {measureOrbit();startOrbit();});
+new ResizeObserver(measureOrbit).observe(orbitScene);
+new MutationObserver(() => {orbitHover=false;measureOrbit();}).observe(storesEl,{childList:true});
+measureOrbit();
+startOrbit();
+
 </script>
 </body>
 </html>
