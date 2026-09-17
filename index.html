@@ -375,12 +375,12 @@ const lojas = [
   {nome:'Casa Bauducco', logo:'logos/menu-logo-1.png', cardapio:'cardapio-teste.pdf'},
   {nome:'Casa Café', logo:'logos/menu-logo-2.png', cardapio:'Cardápio Casa Café.pdf', imagens:["cardapios/casa-cafe-01.webp", "cardapios/casa-cafe-02.webp"]},
   {nome:'Rei do Pão de Queijo', logo:'logos/menu-logo-3.png', cardapio:'Cardápio Rei do Pão de Queijo.pdf', imagens:["cardapios/rei-do-pao-de-queijo-01.webp", "cardapios/rei-do-pao-de-queijo-02.webp"]},
-  {nome:'Royal Trudel', logo:'logos/menu-logo-4.png', cardapio:'cardapio-teste.pdf', imagens:["cardapios/trudel-01.webp"]},
+  {nome:'Royal Trudel', historia:'historias/historia-royal-trudel.webp', logo:'logos/menu-logo-4.png', cardapio:'cardapio-teste.pdf', imagens:["cardapios/trudel-01.webp"]},
   {nome:'Capital Coffee', logo:'logos/menu-logo-5.png', cardapio:'cardapio-teste.pdf', imagens:["cardapios/capital-coffee-01.webp", "cardapios/capital-coffee-02.webp"]},
-  {nome:'Johnny Rockets', logo:'logos/menu-logo-6.png', cardapio:'cardapio-teste.pdf'},
-  {nome:'Lugano', logo:'logos/menu-logo-7.png', cardapio:'Cardápio Lugano.pdf', imagens:["cardapios/lugano-01.webp", "cardapios/lugano-02.webp"]},
+  {nome:'Johnny Rockets', historia:'historias/historia-johnny-rockets.webp', logo:'logos/menu-logo-6.png', cardapio:'cardapio-teste.pdf'},
+  {nome:'Lugano', historia:'historias/historia-lugano.webp', logo:'logos/menu-logo-7.png', cardapio:'Cardápio Lugano.pdf', imagens:["cardapios/lugano-01.webp", "cardapios/lugano-02.webp"]},
   {nome:'La Panaderia', logo:'logos/menu-logo-8.png', cardapio:'cardapio-teste.pdf'},
-  {nome:'Sports Fifteen Bar', logo:'logos/menu-logo-9.png', cardapio:'Sports Bar.pdf', imagens:["cardapios/sports-bar-01.webp", "cardapios/sports-bar-02.webp", "cardapios/sports-bar-03.webp"]},
+  {nome:'Sports Fifteen Bar', historia:'historias/historia-fifteen-sports-bar.webp', logo:'logos/menu-logo-9.png', cardapio:'Sports Bar.pdf', imagens:["cardapios/sports-bar-01.webp", "cardapios/sports-bar-02.webp", "cardapios/sports-bar-03.webp"]},
   {nome:'Salão de Atos PUCRS', logo:'logos/menu-logo-atos.png', imagens:['cardapios/3c-atos-01.webp']}
 ];
 
@@ -516,16 +516,20 @@ function openMenu(loja){
   menuImages.classList.remove("zoomed");
   zoomMenu.textContent = "Ampliar";
   zoomMenu.setAttribute("aria-pressed", "false");
-  const hasImages = Array.isArray(loja.imagens) && loja.imagens.length > 0;
+  const pages = [
+    ...(loja.historia ? [{src:loja.historia, alt:`História de ${loja.nome}`}] : []),
+    ...(loja.imagens || []).map((src, index) => ({src, alt:`Cardápio ${loja.nome} — página ${index + 1}`}))
+  ];
+  const hasImages = pages.length > 0;
   menuImages.hidden = !hasImages;
   frame.hidden = hasImages;
   zoomMenu.hidden = !hasImages;
   openPdf.hidden = hasImages;
   if(hasImages){
-    loja.imagens.forEach((src, index) => {
+    pages.forEach(({src, alt}, index) => {
       const figure = document.createElement("figure");
       const img = document.createElement("img");
-      img.alt = `Cardápio ${loja.nome} — página ${index + 1}`;
+      img.alt = alt;
       img.loading = index === 0 ? "eager" : "lazy";
       img.decoding = "async";
       img.src = src;
@@ -536,9 +540,9 @@ function openMenu(loja){
         img.replaceWith(link);
       });
       figure.appendChild(img);
-      if(loja.imagens.length > 1){
+      if(pages.length > 1){
         const caption = document.createElement("figcaption");
-        caption.textContent = `Página ${index + 1} de ${loja.imagens.length}`;
+        caption.textContent = `${loja.historia && index === 0 ? "História • " : ""}Página ${index + 1} de ${pages.length}`;
         figure.appendChild(caption);
       }
       menuImages.appendChild(figure);
